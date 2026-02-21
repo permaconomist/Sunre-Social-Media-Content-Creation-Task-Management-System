@@ -23,30 +23,11 @@
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- Setup Gate -->
-    <div id="setup-gate" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6 hidden">
-        <div class="max-w-md w-full glass-panel p-8 text-center border-yellow-400/20">
-            <h1 class="text-2xl font-bold mb-2">Workspace <span class="text-yellow-400">Setup</span></h1>
-            <p class="text-xs text-gray-500 mb-6 uppercase tracking-widest">Connect your Supabase Project</p>
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Project URL</label>
-                    <input type="text" id="setup-url" placeholder="https://your-id.supabase.co" class="w-full p-3 mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-1">Anon Key</label>
-                    <input type="password" id="setup-key" placeholder="your-public-anon-key" class="w-full p-3 mt-1">
-                </div>
-                <button onclick="handleSetupSubmit()" class="w-full bg-yellow-400 text-black font-bold p-4 rounded-lg hover:bg-yellow-300 transition mt-4">Initialize System</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Auth Gateway -->
     <div id="auth-gate" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-6 hidden">
         <div class="max-w-md w-full glass-panel p-8">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold mb-2">Sunre <span class="text-yellow-400">AdContent</span></h1>
+                <h1 class="text-3xl font-bold mb-2 leading-tight">Sunre <span class="text-yellow-400">AdContent</span></h1>
                 <div class="flex justify-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500 mt-4">
                     <button onclick="toggleAuthMode('login')" id="btn-mode-login" class="text-yellow-400 border-b border-yellow-400 pb-1">Login</button>
                     <button onclick="toggleAuthMode('register')" id="btn-mode-register" class="hover:text-white transition pb-1">Register</button>
@@ -62,7 +43,7 @@
             <form id="register-form" class="space-y-4 hidden">
                 <input type="text" id="reg-name" required class="w-full p-3" placeholder="Full Name">
                 <input type="email" id="reg-email" required class="w-full p-3" placeholder="Email Address">
-                <input type="password" id="reg-password" required class="w-full p-3" placeholder="Password">
+                <input type="password" id="reg-password" required class="w-full p-3" placeholder="Password (Min 6 chars)">
                 <input type="password" id="reg-confirm" required class="w-full p-3" placeholder="Confirm Password">
                 <button type="submit" id="reg-btn" class="w-full bg-white text-black font-bold p-3 rounded hover:bg-gray-200 transition">Request Access</button>
             </form>
@@ -73,177 +54,251 @@
     <div id="pending-gate" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-6 hidden">
         <div class="max-w-md w-full glass-panel p-10 text-center border-yellow-400/30">
             <h1 class="text-2xl font-bold mb-4">Account <span class="text-yellow-400">Pending</span></h1>
-            <p class="text-gray-400 mb-8 leading-relaxed">Please wait for admin approval.</p>
-            <button onclick="handleLogout()" class="text-xs uppercase font-bold text-gray-500 hover:text-white transition">Return to Login</button>
+            <p class="text-gray-400 mb-8 leading-relaxed">Your request has been submitted. Please wait for admin approval before you can access the workspace.</p>
+            <button onclick="handleLogout()" class="text-xs uppercase font-bold text-gray-500 hover:text-white transition tracking-widest">Return to Login</button>
         </div>
     </div>
 
     <!-- Main App Content -->
     <div id="app-content" class="hidden">
-        <header class="max-w-7xl mx-auto flex justify-between items-center mb-8">
-            <h1 class="text-xl font-black">SUNRE <span class="text-yellow-400">ADCONTENT</span></h1>
-            <div class="flex gap-4">
-                <span id="user-display" class="text-sm text-gray-400 self-center"></span>
-                <button onclick="handleLogout()" class="text-red-400 text-sm font-bold">Logout</button>
+        <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-xl font-black tracking-tight">SUNRE <span class="text-yellow-400">ADCONTENT</span></h1>
+                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest" id="user-context">
+                    <span id="user-role-badge" class="bg-white/10 px-2 py-0.5 rounded mr-2 text-yellow-400">Role</span>
+                    <span id="current-user-display">Loading...</span>
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="switchView('creator')" id="tab-creator" class="px-4 py-2 text-sm font-semibold tab-active">My Tasks</button>
+                <button onclick="switchView('ceo')" id="tab-ceo" class="px-4 py-2 text-sm font-semibold text-gray-500 hidden">Admin Panel</button>
+                <button onclick="handleLogout()" class="px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-400/10 rounded transition">Logout</button>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Sidebar/Form -->
-            <div class="lg:col-span-4 space-y-4">
-                <div class="glass-panel p-6">
-                    <h2 class="text-lg font-bold mb-4">New Task Update</h2>
-                    <form id="task-form" class="space-y-4">
-                        <input type="text" id="campaign" required class="w-full p-2" placeholder="Campaign Name">
-                        <select id="stage" class="w-full p-2">
-                            <option value="briefing">Briefing</option>
-                            <option value="ai-gen">AI Gen</option>
-                            <option value="editing">Editing</option>
-                            <option value="review">Review</option>
-                        </select>
-                        <select id="status" class="w-full p-2">
-                            <option value="on-track">On Track</option>
-                            <option value="at-risk">At Risk</option>
-                            <option value="delayed">Delayed</option>
-                        </select>
-                        <textarea id="objective" rows="2" class="w-full p-2" placeholder="Task Objective"></textarea>
-                        <button type="submit" class="w-full bg-yellow-400 text-black font-bold py-3 rounded-lg hover:bg-yellow-300 transition">Sync Update</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Feed -->
-            <div class="lg:col-span-8">
-                <div class="glass-panel min-h-[400px]">
-                    <div class="p-4 border-b border-white/10 bg-white/5 font-bold">Activity Feed</div>
-                    <div id="task-list" class="p-4 space-y-4">
-                        <!-- Tasks appear here -->
+        <main class="max-w-7xl mx-auto">
+            <!-- CREATOR VIEW -->
+            <section id="view-creator" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="glass-panel p-6">
+                        <h2 class="text-lg font-bold mb-4 text-yellow-400">Task Update</h2>
+                        <form id="session-form" class="space-y-4">
+                            <input type="text" id="campaign" required class="w-full p-2" placeholder="Campaign Name">
+                            <div class="grid grid-cols-2 gap-2">
+                                <select id="stage" class="w-full p-2">
+                                    <option value="brief">Briefing</option>
+                                    <option value="ai">AI Gen</option>
+                                    <option value="edit">Editing</option>
+                                    <option value="review">Review</option>
+                                </select>
+                                <select id="ceo_status" class="w-full p-2">
+                                    <option value="on-track">On Track</option>
+                                    <option value="at-risk">At Risk</option>
+                                    <option value="delayed">Delayed</option>
+                                </select>
+                            </div>
+                            <textarea id="objective" rows="2" class="w-full p-2" placeholder="Task Objective"></textarea>
+                            <textarea id="blockers" rows="2" class="w-full p-2" placeholder="Current Blockers"></textarea>
+                            <button type="submit" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition">Update Status</button>
+                        </form>
                     </div>
                 </div>
-            </div>
+
+                <div class="lg:col-span-8">
+                    <div class="glass-panel overflow-hidden">
+                        <div class="p-4 border-b border-white/10 bg-white/5 font-bold">Activity Feed</div>
+                        <div id="session-list" class="divide-y divide-white/5 p-4 space-y-4">
+                            <div class="text-center py-10 text-gray-600">Syncing with server...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CEO MONITOR VIEW -->
+            <section id="view-ceo" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel overflow-hidden">
+                        <div class="p-4 border-b border-white/10 bg-white/5">
+                            <h2 class="font-bold text-yellow-400 text-sm">User Management</h2>
+                        </div>
+                        <div class="p-4 overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="uppercase text-gray-500">
+                                    <tr>
+                                        <th class="p-2">Name</th>
+                                        <th class="p-2">Role</th>
+                                        <th class="p-2">Status</th>
+                                        <th class="p-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-manage-body" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="glass-panel p-6 border-l-4 border-green-500 flex justify-between items-center">
+                            <span class="text-gray-400">On Track</span>
+                            <h3 class="text-2xl font-bold" id="stat-on-track">0</h3>
+                        </div>
+                        <div class="glass-panel p-6 border-l-4 border-yellow-500 flex justify-between items-center">
+                            <span class="text-gray-400">At Risk</span>
+                            <h3 class="text-2xl font-bold" id="stat-at-risk">0</h3>
+                        </div>
+                        <div class="glass-panel p-6 border-l-4 border-red-500 flex justify-between items-center">
+                            <span class="text-gray-400">Delayed</span>
+                            <h3 class="text-2xl font-bold" id="stat-delayed">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 glass-panel px-6 py-3 text-sm font-semibold opacity-0 pointer-events-none transition-all duration-300 z-[100]"></div>
+
     <script>
-        // Use empty strings to trigger setup gate, or fill them to bypass it
-        const HARDCODED_URL = ""; 
-        const HARDCODED_KEY = ""; 
+        /**
+         * SUPABASE INITIALIZATION
+         */
+        const HARDCODED_URL = "https://Iv6Tt-L4VtsN53aoqGLQzw.supabase.co"; 
+        const HARDCODED_KEY = "sb_publishable_Iv6Tt-L4VtsN53aoqGLQzw_Wp66r189";
 
-        let supabaseClient = null;
+        let supabaseClient = null; 
         let currentUser = null;
+        let profile = null;
 
-        window.onload = () => {
-            const url = HARDCODED_URL || localStorage.getItem('sunre_url');
-            const key = HARDCODED_KEY || localStorage.getItem('sunre_key');
-
-            if (url && key) {
-                init(url, key);
-            } else {
-                document.getElementById('setup-gate').classList.remove('hidden');
-            }
+        window.onload = async () => {
+            initSupabase(HARDCODED_URL, HARDCODED_KEY);
         };
 
-        function handleSetupSubmit() {
-            const u = document.getElementById('setup-url').value.trim();
-            const k = document.getElementById('setup-key').value.trim();
-            if (u && k) {
-                localStorage.setItem('sunre_url', u);
-                localStorage.setItem('sunre_key', k);
-                location.reload();
-            }
-        }
-
-        async function init(url, key) {
+        async function initSupabase(url, key) {
             supabaseClient = supabase.createClient(url, key);
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                checkProfile();
+                await fetchProfile();
             } else {
                 document.getElementById('auth-gate').classList.remove('hidden');
             }
         }
 
-        async function checkProfile() {
-            const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+        async function fetchProfile() {
+            const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
             if (data) {
-                if (data.status === 'active') {
-                    showApp(data);
-                } else {
+                profile = data;
+                if (profile.status === 'pending') {
                     document.getElementById('pending-gate').classList.remove('hidden');
+                } else {
+                    onAuthenticated();
                 }
             } else {
                 handleLogout();
             }
         }
 
-        function showApp(profile) {
+        function onAuthenticated() {
+            document.getElementById('auth-gate').classList.add('hidden');
+            document.getElementById('pending-gate').classList.add('hidden');
             document.getElementById('app-content').classList.remove('hidden');
-            document.getElementById('user-display').textContent = profile.name;
-            fetchTasks();
+            
+            if (['ceo', 'admin', 'aiarchitect'].includes(profile.role)) {
+                document.getElementById('tab-ceo').classList.remove('hidden');
+            }
+
+            document.getElementById('current-user-display').textContent = profile.name || currentUser.email;
+            document.getElementById('user-role-badge').textContent = profile.role;
+            
+            fetchSessions();
         }
 
-        async function fetchTasks() {
-            const { data } = await supabaseClient.from('sessions').select('*').order('created_at', { ascending: false });
-            if (data) renderTasks(data);
+        async function fetchSessions() {
+            const query = supabaseClient.from('sessions').select('*');
+            if (profile.role === 'creator') query.eq('user_id', currentUser.id);
+            const { data } = await query.order('created_at', { ascending: false });
+            if (data) renderSessions(data);
         }
 
-        function renderTasks(tasks) {
-            const container = document.getElementById('task-list');
-            container.innerHTML = tasks.map(t => `
+        function renderSessions(sessions) {
+            const container = document.getElementById('session-list');
+            container.innerHTML = sessions.map(s => `
                 <div class="p-4 border border-white/5 rounded-lg bg-white/5">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-yellow-400">${t.campaign}</h3>
-                        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white/10">${t.stage}</span>
+                        <h3 class="font-bold text-yellow-400 text-sm">${s.campaign}</h3>
+                        <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-white/10">${s.stage}</span>
                     </div>
-                    <p class="text-sm text-gray-400 mb-3">${t.objective || 'No objective set'}</p>
-                    <div class="flex items-center gap-2 text-[10px] uppercase font-bold">
-                        <span class="status-dot ${t.ceo_status}"></span>
-                        <span class="text-gray-500">${new Date(t.created_at).toLocaleDateString()}</span>
+                    <p class="text-[11px] text-gray-400 mb-3">${s.objective || ''}</p>
+                    <div class="flex items-center gap-2 text-[9px] uppercase font-bold">
+                        <span class="status-dot ${s.ceo_status}"></span>
+                        <span class="text-gray-600">${new Date(s.created_at).toLocaleDateString()}</span>
                     </div>
                 </div>
             `).join('');
+            
+            if (profile.role !== 'creator') {
+                const stats = { onTrack: 0, atRisk: 0, delayed: 0 };
+                sessions.forEach(s => {
+                    if (s.ceo_status === 'on-track') stats.onTrack++;
+                    if (s.ceo_status === 'at-risk') stats.atRisk++;
+                    if (s.ceo_status === 'delayed') stats.delayed++;
+                });
+                document.getElementById('stat-on-track').textContent = stats.onTrack;
+                document.getElementById('stat-at-risk').textContent = stats.atRisk;
+                document.getElementById('stat-delayed').textContent = stats.delayed;
+            }
         }
 
-        // Form Handlers
-        document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) alert(error.message);
-            else location.reload();
-        };
+        function switchView(view) {
+            document.getElementById('view-creator').classList.toggle('hidden', view !== 'creator');
+            document.getElementById('view-ceo').classList.toggle('hidden', view !== 'ceo');
+            document.getElementById('tab-creator').className = view === 'creator' ? 'px-4 py-2 text-sm font-semibold tab-active' : 'px-4 py-2 text-sm font-semibold text-gray-500';
+            document.getElementById('tab-ceo').className = view === 'ceo' ? 'px-4 py-2 text-sm font-semibold tab-active' : 'px-4 py-2 text-sm font-semibold text-gray-500';
+            if (view === 'ceo') fetchAllUsers();
+        }
 
-        document.getElementById('register-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            
-            const { data, error } = await supabaseClient.auth.signUp({ email, password });
-            if (error) alert(error.message);
-            else {
-                await supabaseClient.from('profiles').insert([{ id: data.user.id, name, email, status: 'pending' }]);
-                location.reload();
-            }
-        };
+        async function fetchAllUsers() {
+            const { data } = await supabaseClient.from('profiles').select('*');
+            const body = document.getElementById('user-manage-body');
+            body.innerHTML = data.map(u => `
+                <tr class="hover:bg-white/5">
+                    <td class="p-2">${u.name}</td>
+                    <td class="p-2">
+                        <select onchange="updateUserRole('${u.id}', this.value)" class="bg-transparent text-[10px] font-bold text-yellow-400">
+                            <option value="creator" ${u.role === 'creator' ? 'selected' : ''}>Creator</option>
+                            <option value="ceo" ${u.role === 'ceo' ? 'selected' : ''}>CEO</option>
+                        </select>
+                    </td>
+                    <td class="p-2">
+                        <span class="text-[9px] px-1.5 py-0.5 rounded ${u.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">${u.status}</span>
+                    </td>
+                    <td class="p-2">
+                        <button onclick="updateUserStatus('${u.id}', '${u.status === 'active' ? 'pending' : 'active'}')" class="text-[10px] uppercase font-bold text-gray-400 hover:text-white">Toggle</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-        document.getElementById('task-form').onsubmit = async (e) => {
+        async function updateUserStatus(uid, status) {
+            const { error } = await supabaseClient.from('profiles').update({ status }).eq('id', uid);
+            if (!error) { showToast("Sync Complete"); fetchAllUsers(); }
+        }
+
+        async function updateUserRole(uid, role) {
+            const { error } = await supabaseClient.from('profiles').update({ role }).eq('id', uid);
+            if (!error) showToast("Permissions Updated");
+        }
+
+        document.getElementById('session-form').onsubmit = async (e) => {
             e.preventDefault();
-            const payload = {
+            const { error } = await supabaseClient.from('sessions').insert([{
                 user_id: currentUser.id,
                 campaign: document.getElementById('campaign').value,
                 stage: document.getElementById('stage').value,
-                ceo_status: document.getElementById('status').value,
-                objective: document.getElementById('objective').value
-            };
-            const { error } = await supabaseClient.from('sessions').insert([payload]);
-            if (error) alert(error.message);
-            else {
-                e.target.reset();
-                fetchTasks();
-            }
+                ceo_status: document.getElementById('ceo_status').value,
+                objective: document.getElementById('objective').value,
+                blockers: document.getElementById('blockers').value
+            }]);
+            if (!error) { showToast("Update Saved"); e.target.reset(); fetchSessions(); }
+            else { showToast("Error: check permissions"); }
         };
 
         function toggleAuthMode(mode) {
@@ -253,9 +308,38 @@
         }
 
         async function handleLogout() {
-            if(supabaseClient) await supabaseClient.auth.signOut();
+            if (supabaseClient) await supabaseClient.auth.signOut();
             location.reload();
         }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `fixed bottom-8 left-1/2 -translate-x-1/2 glass-panel px-6 py-3 text-sm font-semibold opacity-100 z-[100] border-yellow-400 text-yellow-400`;
+            setTimeout(() => t.style.opacity = '0', 2500);
+        }
+
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) showToast("Invalid Credentials");
+            else location.reload();
+        };
+
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) showToast(error.message);
+            else {
+                await supabaseClient.from('profiles').insert([{ id: data.user.id, name, email, status: 'pending', role: 'creator' }]);
+                location.reload();
+            }
+        };
     </script>
 </body>
 </html>
